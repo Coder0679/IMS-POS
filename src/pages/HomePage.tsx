@@ -31,7 +31,7 @@ export default function HomePage() {
               Open Now
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-              Shri Ram
+              Shri Shyam
               <br />
               <span className="text-orange-200 dark:text-orange-300">Hardware & Electronics</span>
             </h1>
@@ -145,7 +145,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-gray-900 dark:bg-black text-gray-400 text-center py-6 text-sm border-t border-gray-800">
         <p>
-          © {new Date().getFullYear()} Shri Ram Hardware & Electronics. All
+          © {new Date().getFullYear()} Shri Shyam Hardware & Electronics. All
           rights reserved.
         </p>
       </footer>

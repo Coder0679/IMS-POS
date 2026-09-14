@@ -15,7 +15,6 @@ import {
   ShoppingCart,
   IndianRupee,
   Calendar,
-  ChevronDown,
   BarChart3,
   Package,
 } from "lucide-react";
@@ -39,6 +38,8 @@ export default function SalesPage() {
 
   // Form state
   const [formProductId, setFormProductId] = useState("");
+  const [formProductSearch, setFormProductSearch] = useState("");
+  const [formSellingPrice, setFormSellingPrice] = useState("");
   const [formQuantity, setFormQuantity] = useState("");
   const [formDate, setFormDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -57,15 +58,22 @@ export default function SalesPage() {
   }
 
   const selectedProduct = products.find((p) => p.id === formProductId);
+  const matchingProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(formProductSearch.toLowerCase())
+  );
 
   async function handleAddSale(e: FormEvent) {
     e.preventDefault();
     if (!selectedProduct) return;
+
+    const sellingPrice = Number(formSellingPrice);
+    if (!Number.isFinite(sellingPrice) || sellingPrice < 0) return;
+
     setSaving(true);
 
     const qty = parseInt(formQuantity) || 0;
-    const totalAmount = qty * selectedProduct.sellingPrice;
-    const profit = qty * (selectedProduct.sellingPrice - selectedProduct.costPrice);
+    const totalAmount = qty * sellingPrice;
+    const profit = qty * (sellingPrice - selectedProduct.costPrice);
 
     await addSale({
       productId: selectedProduct.id,
@@ -73,7 +81,7 @@ export default function SalesPage() {
       category: selectedProduct.category,
       quantity: qty,
       costPrice: selectedProduct.costPrice,
-      sellingPrice: selectedProduct.sellingPrice,
+      sellingPrice,
       totalAmount,
       profit,
       saleDate: formDate,
@@ -82,6 +90,8 @@ export default function SalesPage() {
     await loadData();
     setShowAddModal(false);
     setFormProductId("");
+    setFormProductSearch("");
+    setFormSellingPrice("");
     setFormQuantity("");
     setFormDate(new Date().toISOString().split("T")[0]);
     setSaving(false);
@@ -488,22 +498,61 @@ export default function SalesPage() {
                     Select Product *
                   </label>
                   <div className="relative">
-                    <select
-                      value={formProductId}
-                      onChange={(e) => setFormProductId(e.target.value)}
+                    <input
+                      type="text"
+                      value={formProductSearch}
+                      onChange={(e) => {
+                        setFormProductSearch(e.target.value);
+                        setFormProductId("");
+                        setFormSellingPrice("");
+                      }}
                       required
-                      className="appearance-none w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm pr-10 transition-colors"
-                    >
-                      <option value="">Choose a product...</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} (Stock: {p.stockQuantity}) - ₹
-                          {p.sellingPrice}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      placeholder="Search products..."
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition-colors"
+                    />
+                    {formProductSearch && !formProductId && (
+                      <div className="absolute z-10 w-full mt-1 max-h-40 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                        {matchingProducts.length > 0 ? (
+                          matchingProducts.map((product) => (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => {
+                                setFormProductId(product.id);
+                                setFormProductSearch(product.name);
+                                setFormSellingPrice(product.sellingPrice.toString());
+                              }}
+                              className="block w-full px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            >
+                              {product.name} (Stock: {product.stockQuantity}) - ₹
+                              {product.sellingPrice}
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400">
+                            No matching products
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                {/* Selling Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Selling Price *
+                  </label>
+                  <input
+                    type="number"
+                    value={formSellingPrice}
+                    onChange={(e) => setFormSellingPrice(e.target.value)}
+                    required
+                    min="0"
+                    step="0.01"
+                    placeholder="Enter selling price"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm transition-colors"
+                  />
                 </div>
 
                 {/* Quantity */}
@@ -534,7 +583,7 @@ export default function SalesPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500 dark:text-gray-400">Selling Price:</span>
                       <span className="text-gray-700 dark:text-gray-300">
-                        ₹{selectedProduct.sellingPrice} × {formQuantity}
+                        ₹{formSellingPrice} × {formQuantity}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
@@ -542,7 +591,7 @@ export default function SalesPage() {
                       <span className="font-bold text-gray-900 dark:text-white">
                         ₹
                         {(
-                          selectedProduct.sellingPrice *
+                          (parseFloat(formSellingPrice) || 0) *
                           (parseInt(formQuantity) || 0)
                         ).toLocaleString("en-IN")}
                       </span>
@@ -552,7 +601,7 @@ export default function SalesPage() {
                       <span className="font-bold text-green-600 dark:text-green-400">
                         ₹
                         {(
-                          (selectedProduct.sellingPrice -
+                          ((parseFloat(formSellingPrice) || 0) -
                             selectedProduct.costPrice) *
                           (parseInt(formQuantity) || 0)
                         ).toLocaleString("en-IN")}

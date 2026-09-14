@@ -36,7 +36,7 @@ export default function Header() {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">
-                Shri Ram
+                Shri Shyam
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 -mt-0.5 leading-tight">
                 Hardware & Electronics
